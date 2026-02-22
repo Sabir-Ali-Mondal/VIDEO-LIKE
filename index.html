@@ -326,7 +326,7 @@
     </style>
 </head>
 
-<body>
+<body style="caret-color: transparent;">
     <!-- APP SPLASH SCREEN -->
     <div id="splash-screen" class="min-h-screen flex items-center justify-center bg-black px-6 text-center">
         <div class="max-w-xl space-y-6">
@@ -350,7 +350,7 @@
 
     <div id="notification-area"></div>
 
-    <div id="stage-container">
+    <div id="stage-container" style="caret-color: transparent;">
         <div id="stage-content">
             <!-- Dynamic Film Grain & Transitions -->
             <div class="film-grain" id="dynamic-grain"></div>
@@ -523,7 +523,7 @@
                 <button onclick="document.getElementById('file-upload').click()" class="flex-1 bg-purple-600/20 border border-purple-500/50 text-purple-400 font-bold py-3 rounded-xl hover:bg-purple-600 hover:text-white transition"><i class="bi bi-upload mr-2"></i> UPLOAD</button>
                 <input type="file" id="file-upload" hidden accept=".json" onchange="Engine.io.uploadJSON(this)">
             </div>
-            <div style="position:relative; width:100%;">
+            <div style="caret-color: red;position:relative; width:100%;">
 
                 <!-- Floating Button -->
                 <button id="clearPasteBtn" title="Clear & Paste" style="
@@ -629,7 +629,7 @@
                 </button>
             </div>
             <div class="flex gap-4 mb-6">
-                <textarea id="ai-prompt" class="flex-1 bg-black border border-white/10 rounded-2xl p-6 h-40 text-white outline-none focus:border-primary transition font-mono text-sm shadow-inner" placeholder="Enter topic, guide, needs, or description here..."></textarea>
+                <textarea id="ai-prompt" style="caret-color:yellow;" class="flex-1 bg-black border border-white/10 rounded-2xl p-6 h-40 text-white outline-none focus:border-primary transition font-mono text-sm shadow-inner" placeholder="Enter topic, guide, needs, or description here..."></textarea>
 
                 <div id="ai-image-dropzone" class="w-24 md:w-40 border-2 border-dashed border-white/20 rounded-2xl flex flex-col items-center justify-center text-gray-500 hover:border-primary hover:text-primary transition cursor-pointer relative overflow-hidden group bg-black/50" onclick="document.getElementById('ai-img-upload').click()" ondragover="event.preventDefault(); this.classList.add('border-primary', 'bg-white/5');" ondragleave="event.preventDefault(); this.classList.remove('border-primary', 'bg-white/5');" ondrop="event.preventDefault(); this.classList.remove('border-primary', 'bg-white/5'); Engine.ai.handleDrop(event)">
                     <i class="bi bi-image text-2xl md:text-3xl mb-1 md:mb-2 group-hover:scale-110 transition duration-300"></i>
