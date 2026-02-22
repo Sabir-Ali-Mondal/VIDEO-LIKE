@@ -2155,7 +2155,7 @@ INSTRUCTIONS:
         });
     </script>
     <!-- ========================================================================= -->
-    <!-- PRODUCTION RENDER ENGINE (12MBPS + SOFT SUBS + PERFECT CROP)              -->
+    <!-- FINAL RENDER ENGINE (TOP MARGIN FIX + BOTTOM ALIGN + SAFETY ZONES)        -->
     <!-- ========================================================================= -->
     <script>
         const RenderStudio = {
@@ -2185,7 +2185,7 @@ INSTRUCTIONS:
             init: () => {
                 if (RenderStudio.isMobile() || !navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) return;
 
-                // 1. Inject CSS
+                // 1. Inject CSS (CURSOR HIDING + SAFETY MARGINS)
                 const style = document.createElement('style');
                 style.innerHTML = `
                 #render-overlay {
@@ -2213,8 +2213,28 @@ INSTRUCTIONS:
                 .countdown-sub { font-size: 14px; color: #555; margin-top: 20px; text-transform: uppercase; letter-spacing: 3px; animation: pulse 1s infinite; }
                 @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 
-                /* FORCE HIDE CURSOR DURING RENDER */
-                body.is-rendering, body.is-rendering * { cursor: none !important; }
+                /* === GHOST MODE === */
+                /* 1. Force Cursor Hidden Everywhere */
+                body.is-rendering, 
+                body.is-rendering * { 
+                    cursor: none !important; 
+                }
+
+                /* === SAFETY SHIFT CSS === */
+                /* This is the magic part that fixes the crop issues */
+                body.is-rendering #stage-container {
+                    /* Push 74px DOWN from the top to clear the Browser's "X" overlay */
+                    padding-top: 76px !important;
+                    
+                    /* Push 50px UP from the bottom to clear the "Sharing" bar */
+                    padding-bottom: 57px !important;
+                    
+                    /* Align the video towards the bottom (as requested) */
+                    align-items: flex-end !important;
+                    
+                    /* Keep horizontal centering */
+                    justify-content: center !important;
+                }
             `;
                 document.head.appendChild(style);
 
@@ -2247,7 +2267,8 @@ INSTRUCTIONS:
                         <i class="bi bi-display-fill text-white"></i>&nbsp; Select <b>"Entire Screen"</b>.<br>
                         <i class="bi bi-volume-up-fill text-white"></i>&nbsp; Enable <b>"Share System Audio"</b>.<br>
                         <i class="bi bi-arrows-fullscreen text-white"></i>&nbsp; App enters <b>Fullscreen</b> automatically.<br>
-                        <i class="bi bi-clock-fill text-white"></i>&nbsp; <b>10s</b> Stabilization Delay.
+                        <i class="bi bi-mouse-fill text-white"></i>&nbsp; Mouse Cursor will be <b>Hidden</b>.<br>
+                        <i class="bi bi-eye-slash-fill text-white"></i>&nbsp; Click <b>"Hide"</b> on the sharing bar.
                     </p>
                     <div style="background: rgba(239,68,68,0.05); border-left: 2px solid #ef4444; padding: 15px; margin-bottom: 20px; color: #fca5a5; font-size: 12px; text-align: left;">
                         <i class="bi bi-cc-circle"></i> Subtitles will be saved as a <b>Soft Track (.SRT)</b> matching the video.
@@ -2261,10 +2282,10 @@ INSTRUCTIONS:
                 // 4. Inject Countdown
                 const cd = document.createElement('div');
                 cd.id = 'countdown-overlay';
-                cd.innerHTML = `<span id="cd-val">10</span><div class="countdown-sub">Stabilizing System...</div>`;
+                cd.innerHTML = `<span id="cd-val">10</span><div class="countdown-sub">Click "Hide" on Sharing Bar!</div>`;
                 document.body.appendChild(cd);
 
-                // 5. Global Fullscreen Listener for Safety
+                // 5. Global Fullscreen Listener (Auto-Save on Exit)
                 document.addEventListener('fullscreenchange', () => {
                     if (!document.fullscreenElement && RenderStudio.isRecording) {
                         RenderStudio.stopCapture();
@@ -2287,7 +2308,8 @@ INSTRUCTIONS:
                             displaySurface: "monitor",
                             frameRate: {
                                 ideal: 30
-                            }
+                            },
+                            cursor: "never" // Hides mouse in stream
                         },
                         audio: {
                             echoCancellation: false,
@@ -2301,12 +2323,17 @@ INSTRUCTIONS:
                         return Engine.ui.notify("FAILED: No System Audio", "error");
                     }
 
-                    // 2. Force Fullscreen
+                    // 2. Protection: Stop if user clicks "Stop Sharing" on browser UI
+                    RenderStudio.stream.getVideoTracks()[0].onended = () => {
+                        if (RenderStudio.isRecording) RenderStudio.stopCapture();
+                    };
+
+                    // 3. Force Fullscreen
                     if (!document.fullscreenElement) {
                         await document.body.requestFullscreen().catch(e => console.warn("Fullscreen blocked:", e));
                     }
 
-                    // 3. Countdown
+                    // 4. Countdown
                     setTimeout(() => {
                         RenderStudio.beginCountdown();
                     }, 1000);
@@ -2322,13 +2349,13 @@ INSTRUCTIONS:
                 const val = document.getElementById('cd-val');
                 cd.classList.add('active');
 
-                // Hide UI
+                // Hide UI & Apply Safety Shift CSS
                 document.body.classList.add('is-rendering');
                 document.getElementById('main-ui').style.display = 'none';
                 document.getElementById('notification-area').style.display = 'none';
-                document.getElementById('subtitle-layer').style.display = 'none'; // Hide HTML subs from screen (recorded separately)
+                document.getElementById('subtitle-layer').style.display = 'none'; // Hide HTML subs
 
-                let count = 10;
+                let count = 15;
                 val.innerText = count;
 
                 const timer = setInterval(() => {
@@ -2394,7 +2421,7 @@ INSTRUCTIONS:
                     Engine.playStep();
                 }, 500);
 
-                // ESC Listener - The Critical Part
+                // ESC Listener
                 RenderStudio.escListener = (e) => {
                     if (e.key === "Escape") {
                         e.preventDefault();
@@ -2420,7 +2447,6 @@ INSTRUCTIONS:
                 RenderStudio.recordingStartTime = Date.now();
                 RenderStudio.lastSubText = "";
 
-                // Check for subtitle text changes every 100ms
                 RenderStudio.subInterval = setInterval(() => {
                     const el = document.getElementById('subtitle-text');
                     const text = el ? el.innerText : "";
@@ -2473,7 +2499,8 @@ INSTRUCTIONS:
 
                 if (timestamp - RenderStudio.lastDrawTime >= 33.3) {
                     const stage = document.getElementById('stage-content');
-                    const rect = stage.getBoundingClientRect();
+                    const rect = stage.getBoundingClientRect(); // Picks up shifted CSS position
+
                     const scaleX = RenderStudio.videoObj.videoWidth / window.innerWidth;
                     const scaleY = RenderStudio.videoObj.videoHeight / window.innerHeight;
 
@@ -2488,36 +2515,36 @@ INSTRUCTIONS:
             },
 
             stopCapture: () => {
-                // 1. Mark as stopped to prevent loops
+                if (!RenderStudio.isRecording) return;
                 RenderStudio.isRecording = false;
 
-                // 2. STOP RECORDER FIRST (Important: Do this before exiting FS)
+                // 1. STOP RECORDER
                 if (RenderStudio.recorder && RenderStudio.recorder.state !== 'inactive') {
                     RenderStudio.recorder.stop();
                 }
 
-                // 3. Cleanup logic
+                // 2. Cleanup
                 clearInterval(RenderStudio.checkInterval);
                 clearInterval(RenderStudio.subInterval);
                 cancelAnimationFrame(RenderStudio.rafId);
                 window.removeEventListener('keydown', RenderStudio.escListener);
 
-                // 4. Stop Stream (kills the "Sharing" browser bar)
+                // 3. Stop Stream
                 if (RenderStudio.stream) RenderStudio.stream.getTracks().forEach(track => track.stop());
 
-                // 5. Pause Engine
+                // 4. Pause Engine
                 Engine.togglePlay();
 
-                // 6. NOW Exit Fullscreen (Safe because recording has stopped)
+                // 5. Exit Fullscreen
                 if (document.fullscreenElement) document.exitFullscreen().catch(e => console.log(e));
 
-                // 7. Restore UI
+                // 6. Restore UI
                 document.body.classList.remove('is-rendering');
                 document.getElementById('main-ui').style.display = 'flex';
                 document.getElementById('notification-area').style.display = 'flex';
                 document.getElementById('subtitle-layer').style.display = '';
 
-                Engine.ui.notify("Saving High Quality Video...", "info");
+                Engine.ui.notify("Saving Video...", "info");
             },
 
             finalizeVideo: () => {
@@ -2538,7 +2565,7 @@ INSTRUCTIONS:
                 document.body.appendChild(a);
                 a.click();
 
-                // DOWNLOAD SRT (Identical filename)
+                // DOWNLOAD SRT
                 const srtContent = RenderStudio.generateSrtFile();
                 const srtBlob = new Blob([srtContent], {
                     type: 'text/srt'
