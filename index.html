@@ -344,6 +344,28 @@
         .transition-active {
             opacity: 0.6 !important;
         }
+
+        @keyframes borderColorShift {
+            0% {
+                border-color: #facc15;
+            }
+
+            /* yellow */
+            50% {
+                border-color: #ef4444;
+            }
+
+            /* red */
+            100% {
+                border-color: #facc15;
+            }
+
+            /* yellow */
+        }
+
+        .border-animate {
+            animation: borderColorShift 2s infinite linear;
+        }
     </style>
 </head>
 
@@ -697,21 +719,39 @@
     <div id="modal-director" class="modal-overlay">
         <div class="modal-box w-[600px] border border-purple-500/30 bg-[#0a0a0a]">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-sm font-black italic tracking-tighter text-purple-400">MANUAL WORKFLOW</h2>
+                <h2 class="text-sm font-black italic tracking-tighter text-purple-400">Custom AI & Manual Control</h2>
                 <button onclick="document.getElementById('modal-director').classList.remove('open')" class="text-gray-500 hover:text-white"><i class="bi bi-x-lg"></i></button>
             </div>
-            <button onclick="Engine.ui.copyPrompt()" class="mb-2 text-sm font-semibold tracking-widest bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/30 px-3 md:px-4 py-2 rounded-lg text-yellow-400 transition">
-                <i class="bi bi-copy mr-1"></i> <span class="hidden md:inline"> </span> RESEARCHING PROMPT
-            </button>
-            <p class="text-[10px] text-gray-400 mt-2 mb-2">1. COPY PROMPT &rarr; 2. PASTE INTO EXTERNAL AI &rarr; 3. PASTE JSON RESULT INTO PROJECT</p>
-            <!-- Prompt Display -->
-            <div class="relative group mb-4">
-                <textarea id="director-prompt-out" readonly class="w-full h-48 bg-black border border-white/10 rounded-lg p-3 text-[10px] font-mono text-green-400 outline-none focus:border-purple-500 resize-none leading-relaxed custom-scrollbar" spellcheck="false"></textarea>
-                <button onclick="Ext.copyText()" class="absolute top-2 right-2 bg-white/10 hover:bg-white/20 text-white px-2 py-1 rounded text-[9px] font-bold border border-white/10 transition backdrop-blur-sm">COPY</button>
-            </div>
+            <div class="space-y-6">
 
+                <!-- Researching Step -->
+                <div class="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-400/30 rounded-2xl p-4 shadow-lg">
+                    <p class="text-sm md:text-base font-semibold text-purple-300 tracking-wide leading-relaxed">
+                        1. COPY RESEARCHING PROMPT → 2. PASTE INTO EXTERNAL AI (ADD CONTEXT / TOPIC / IMAGES) → 3. USE GENERATED RESEARCH SCRIPT WITH DIRECTOR PROMPT
+                    </p>
+
+                    <button onclick="Engine.ui.copyPrompt()" class="mt-4 text-xs md:text-sm font-semibold tracking-wider bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/40 px-4 py-2 rounded-full text-purple-300 transition-all duration-300 hover:scale-105">
+                        <i class="bi bi-copy mr-1"></i> RESEARCHING PROMPT
+                    </button>
+                </div>
+                <div class=" bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-400/30 rounded-2xl p-5 shadow-lg space-y-4">
+
+                    <p class="text-sm md:text-base font-semibold text-purple-300 tracking-wide leading-relaxed">
+                        1. COPY DIRECTOR PROMPT → 2. PASTE INTO EXTERNAL AI (ADD CONTEXT / TOPIC / IMAGES / RESEARCH / DEMO JSON) → 3. PASTE GENERATED JSON INTO PROJECT
+                    </p>
+
+                    <div class="relative">
+                        <textarea id="director-prompt-out" readonly class="w-full h-52 bg-black/80 border border-purple-400/30 rounded-xl p-4 text-xs font-mono text-green-400 outline-none focus:border-purple-400 resize-none leading-relaxed custom-scrollbar shadow-inner" spellcheck="false"></textarea>
+
+                        <button onclick="Ext.copyText()" class="absolute top-3 right-3 bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 px-3 py-1 rounded-full text-xs font-semibold border border-purple-400/40 transition-all duration-300 hover:scale-105 backdrop-blur-sm">
+                            <i class="bi bi-copy mr-1"></i> DIRECTOR PROMPT
+                        </button>
+                    </div>
+
+                </div>
+            </div>
             <!-- Tools Grid -->
-            <div class="grid grid-cols-2 gap-3">
+            <div class="mt-4 grid grid-cols-2 gap-3">
                 <!-- Step A: Assets -->
                 <div class="p-3 bg-white/5 rounded-lg border border-white/10">
                     <div class="text-[9px] font-bold text-gray-500 tracking-widest mb-2">A. ASSETS</div>
@@ -723,7 +763,7 @@
 
                 <!-- Step B: External AI -->
                 <div class="p-3 bg-white/5 rounded-lg border border-white/10">
-                    <div class="text-[9px] font-bold text-gray-500 tracking-widest mb-2">B. OPEN STUDIO</div>
+                    <div class="text-[9px] font-bold text-gray-500 tracking-widest mb-2">B. Chatbots </div>
                     <div class="flex flex-col gap-2">
                         <a href="https://aistudio.google.com/" target="_blank" class="flex items-center justify-center gap-2 bg-stone-800 hover:bg-stone-700 text-white py-2 rounded text-[10px] font-bold border border-white/10 transition">
                             Gemini Studio <i class="bi bi-box-arrow-up-right text-[9px]"></i>
@@ -2414,8 +2454,8 @@ INSTRUCTIONS:
                     // Create "Manual Workflow" Button
                     const btn = document.createElement('button');
                     // Matched styling to your existing Research button, but purple
-                    btn.className = "ml-2 text-sm font-semibold tracking-widest bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 px-3 md:px-4 py-2 rounded-lg text-purple-400 transition";
-                    btn.innerHTML = '<i class="bi bi-terminal mr-1"></i> <span class="hidden md:inline">Manual </span>Workflow';
+                    btn.className = "ml-2 text-[10px] md:text-sm font-semibold tracking-wide bg-purple-500/10 hover:bg-purple-500/20 border-2 px-2 py-1 md:px-4 md:py-2 text-purple-400 transition border-animate";
+                    btn.innerHTML = '<i class="bi bi-terminal mr-1"></i>  <span> Custom AI <br class="block md:hidden"> & Manual Control </span>';
                     btn.onclick = Ext.openDirectorModal;
 
                     // Append it next to the Research button
